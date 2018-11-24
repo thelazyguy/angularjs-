@@ -1,0 +1,216 @@
+
+<head>
+<link rel="stylesheet" type="text/css" href="ca.css">
+
+
+<script src="angular.min.js"></script>
+
+<script>
+
+
+
+
+var app = angular.module('myApp', [])
+
+    app.directive('onReadFile', function ($parse) {
+    return {
+        restrict: 'A',
+        scope: false,
+        link: function (scope, element, attrs) {
+            element.bind('change', function (e) {
+
+                var onFileReadFn = $parse(attrs.onReadFile);
+                var reader = new FileReader();
+
+                reader.onload = function () {
+                    var fileContents = reader.result;
+                    // invoke parsed function on scope
+                    // special syntax for passing in data
+                    // to named parameters
+                    // in the parsed function
+                    // we are providing a value for the property 'contents'
+                    // in the scope we pass in to the function
+                    scope.$apply(function () {
+                        onFileReadFn(scope, {
+                            'contents': fileContents
+                        });
+                    });
+                };
+                reader.readAsText(element[0].files[0]);
+            });
+        }
+    };
+})
+    app.controller('someCtrl', function ($scope,$filter) {
+
+    $scope.displayFileContents = function (contents) {
+        console.log(contents);
+        $scope.results = contents;
+    };
+	
+            $scope.lower=function(){
+			
+			alert("hi from upper");
+			$scope.$watch('results', function (val) {
+               $scope.hoj=results = $filter('uppercase')(val);
+            }, true);
+			
+			};
+			 $scope.hj = "John";
+ 
+ 
+
+            $scope.upper=function(){
+			
+			//alert("hi from upper");
+			$scope.$watch('results', function (val) {
+               $scope.hoj=hj = $filter('uppercase')(val);
+            }, true);
+			
+			};
+			
+			
+            $scope.lower=function(){
+			
+			//alert("hi from upper");
+			$scope.$watch('results', function (val) {
+               $scope.hoj=hj = $filter('lowercase')(val);
+            }, true);
+			
+			};
+			$scope.downloadFile = function(filename, data) {
+
+            var success = false;
+            var contentType = 'text/plain;charset=utf-8';
+
+            try
+            {
+                // Try using msSaveBlob if supported
+                var blob = new Blob([data], { type: contentType });
+                if(navigator.msSaveBlob) {
+                    navigator.msSaveBlob(blob, filename);
+                }
+                else {
+                    // Try using other saveBlob implementations, if available
+                    var saveBlob = navigator.webkitSaveBlob || navigator.mozSaveBlob || navigator.saveBlob;
+                    if(saveBlob === undefined) throw "Not supported";
+                    saveBlob(blob, filename);
+                }
+                success = true;
+            } catch(ex)
+            {
+                console.log("saveBlob method failed with the following exception:");
+                console.log(ex);
+            }
+
+            if(!success)
+            {
+                // Get the blob url creator
+                var urlCreator = window.URL || window.webkitURL || window.mozURL || window.msURL;
+                if(urlCreator)
+                {
+                    // Try to use a download link
+                    var link = document.createElement('a');
+                    if('download' in link)
+                    {
+                        // Try to simulate a click
+                        try
+                        {
+                            // Prepare a blob URL
+                            var blob = new Blob([data], { type: contentType });
+                            var url = urlCreator.createObjectURL(blob);
+                            link.setAttribute('href', url);
+
+                            // Set the download attribute (Supported in Chrome 14+ / Firefox 20+)
+                            link.setAttribute("download", filename);
+
+                            // Simulate clicking the download link
+                            var event = document.createEvent('MouseEvents');
+                            event.initMouseEvent('click', true, true, window, 1, 0, 0, 0, 0, false, false, false, false, 0, null);
+                            link.dispatchEvent(event);
+                            console.log("Download link method with simulated click succeeded");
+                            success = true;
+
+                        } catch(ex) {
+                            console.log("Download link method with simulated click failed with the following exception:");
+                            console.log(ex);
+                        }
+                    }
+
+                    if(!success)
+                    {
+                        // Fallback to window.location method
+                        try
+                        {
+                            // Prepare a blob URL
+                            // Use application/octet-stream when using window.location to force download
+                            console.log("Trying download link method with window.location ...");
+                            var blob = new Blob([data], { type: octetStreamMime });
+                            var url = urlCreator.createObjectURL(blob);
+                            window.location = url;
+                            console.log("Download link method with window.location succeeded");
+                            success = true;
+                        } catch(ex) {
+                            console.log("Download link method with window.location failed with the following exception:");
+                            console.log(ex);
+                        }
+                    }
+
+                }
+            }
+
+            if(!success)
+            {
+                // Fallback to window.open method
+                console.log("No methods worked for saving the arraybuffer, using last resort window.open.  Not Implemented");
+                //window.open(httpPath, '_blank', '');
+            }
+        };
+	
+});
+
+
+
+
+</script>
+
+
+</head>
+
+<body ng-app="myApp"  ng-controller="someCtrl">
+
+
+
+
+<textarea id="a" ng-model="results">  {{hj}} </textarea> <button id="bt1" ng-click="upper()">UPPER</button>   <button id="bt2" ng-click="lower()">LOWER</button>     <textarea id="b" > {{hoj}} </textarea>
+<br>
+<br>
+<br>
+<br>
+<br>
+<!--<button id="bt3">Import text in text area1 from a text file </button>-->
+<button id="bt4" ng-click="downloadFile('fileName.txt', hoj)">Export :download the file to local drive</button>
+
+
+
+
+
+
+
+
+
+
+   <!-- <form novalidate=""> -->
+    
+
+        <text id="bt3">Import  </text><input id="bt6" type="file" on-read-file="displayFileContents(contents)" />
+        <br/>
+  <!--   </form> -->
+
+
+
+
+
+</body>
+
+
